@@ -10,13 +10,18 @@ let ki = {
   hr = { decision = 'hold, trigger_on = 'release },
   tr = { decision = 'tap, trigger_on = 'release },
   xx = { decision = 'none },
-} in
+}
+in
 
 let combos = layout.combos in
 
 let virtual_keys' =
-  combos |> std.array.map (fun c =>
-    combo.make config.combo_timeout_ms (std.array.split_at 1 c).right)
+  combos
+  |> std.array.map
+    (
+      fun c =>
+        combo.make config.combo_timeout_ms (std.array.split_at 1 c).right
+    )
 in
 
 let physical_key_count = 28 in
@@ -29,9 +34,11 @@ let rec get_side_of_key_idx = fun key_idx =>
     if std.array.elem key_idx right_indices then 'right else 'left
   else
     let c = std.array.at (key_idx - physical_key_count) combos in
-    let unique_sides = (std.array.split_at 1 c).right
+    let unique_sides =
+      (std.array.split_at 1 c).right
       |> std.array.map get_side_of_key_idx
-      |> util.array.unique in
+      |> util.array.unique
+    in
     if std.array.length unique_sides > 1 then
       'both
     else
@@ -43,26 +50,31 @@ let virtual_base = combos |> std.array.map std.array.first in
 let virtual_filler = combos |> std.array.map (fun c => XXXX) in
 
 let layer_default =
-  let base_keycodes = layout.base_layout
+  let base_keycodes =
+    layout.base_layout
     |> std.string.characters
     |> util.array.enumerate
     |> std.array.map (fun { index, value } => tap.reg.kc."%{value}" index)
   in
-  
+
   let thumb_keycodes =
     let htb_thumb = {
       timeout_ms = 200,
       quick_tap_ms = 150,
       quick_tap_interrupt_ms = 500,
       key_interrupts = std.array.replicate key_count ki.hr,
-    } in
+    }
+    in
 
     layout.thumbs
     |> util.array.enumerate
-    |> std.array.map (fun { index, value } =>
-        value 
-        & hold.reg.layer (index + 1)
-        & hold.reg.behavior htb_thumb)
+    |> std.array.map
+      (
+        fun { index, value } =>
+          value
+          & hold.reg.layer (index + 1)
+          & hold.reg.behavior htb_thumb
+      )
   in
 
   base_keycodes @ thumb_keycodes @ virtual_base
@@ -70,10 +82,11 @@ in
 
 {
   virtual_keys = virtual_keys',
-  layers = [layer_default] @ (
-    ["EXT", "FUNC", "NUM", "SYM"]
-    |> std.array.map (fun name => layout.layers."%{name}")
-    |> std.array.map (fun layer => layer @ virtual_filler)
-  )
+  layers =
+    [layer_default]
+    # @ (
+      # ["EXT", "FUN", "NUM", "SYM"]
+      # |> std.array.map (fun name => layout.layers."%{name}")
+      # |> std.array.map (fun layer => layer @ virtual_filler)
+    # )
 }
-
