@@ -39,7 +39,6 @@
   ["N8", "8"],
   ["N9", "9"],
   ["N0", "0"],
-  ["EXCL", "BANG", "!"],
   ["ENTER", "ENT", "\n"],
   ["ESCAPE", "ESC"],
   ["BACKSPACE", "BSPC"],

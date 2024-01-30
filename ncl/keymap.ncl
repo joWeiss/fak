@@ -1,1 +1,1 @@
-import "examples/cheapis/keymap.ncl"
+import "boards/zilpzalp/seniply/keymap.ncl"

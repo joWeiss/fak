@@ -1,58 +1,67 @@
 let util = import "util_functions.ncl" in
 
 fun ir =>
+  let layer_count = std.array.length ir.key_map in
 
-let layer_count = std.array.length ir.key_map in
+  let rec codegen = {
+    val = {
+      auto = fun value =>
+        if std.is_record value then
+          struct value
+        else if std.is_array value then
+          array value
+        else
+          std.to_string value,
+      struct = fun record =>
+        "{\n"
+        ++ util.array.join
+          "\n"
+          (
+            record
+            |> std.record.to_array
+            |> std.array.map (fun { field, value } => ".%{field} = %{auto value},")
+          )
+        ++ "\n}",
+      array = fun arr => "{ %{util.array.join ", " (std.array.map auto arr)} }"
+    },
 
-let rec codegen = {
-  val = {
-    auto = fun value =>
-      if std.is_record value then
-        struct value
-      else if std.is_array value then
-        array value
-      else
-        std.to_string value,
-    struct = fun record =>
-      "{\n" ++ util.array.join "\n" (
-        record
-        |> std.record.to_array
-        |> std.array.map (fun { field, value } => ".%{field} = %{auto value},")
-      ) ++ "\n}",
-    array = fun arr => "{ %{util.array.join ", " (std.array.map auto arr)} }"
-  },
-
-  defines = fun defines =>
-    let codegen_define = fun { field, value } => if value == false then "" else "#define %{field} %{
+    defines = fun defines =>
+      let codegen_define = fun { field, value } =>
+        if value == false then
+          ""
+        else
+          "#define %{field} %{
       if value == true then "" else std.to_string value
-    }" in
-    defines
-    |> std.record.to_array
-    |> std.array.map codegen_define
-    |> std.array.filter (fun s => s != "")
-    |> util.array.join "\n",
-  
-  pin_def = fun i pin out =>
-    let prefix = if out then "OUT" else "IN" in
-    let port = std.to_string (std.number.truncate (pin / 10)) in
-    let port_idx = std.to_string (pin % 10) in
-    m%"
+    }"
+      in
+      defines
+      |> std.record.to_array
+      |> std.array.map codegen_define
+      |> std.array.filter (fun s => s != "")
+      |> util.array.join "\n",
+
+    pin_def = fun i pin out =>
+      let prefix = if out then "OUT" else "IN" in
+      let port = std.to_string (std.number.truncate (pin / 10)) in
+      let port_idx = std.to_string (pin % 10) in
+      m%"
       #define %{prefix}%{std.to_string i}_PIN %{port_idx}
       SBIT(%{prefix}%{std.to_string i}, P%{port}_ADDR, %{prefix}%{std.to_string i}_PIN);
     "%,
-} in
+  }
+  in
 
-let h_file = m%"
+  let h_file = m%"
   %{codegen.defines ir.defines}
 
   #include "keyboard.h"
 
   void keyboard_init_user();
   void keyboard_scan_user();
-"% in
+"%
+  in
 
-let side_central_defs =
-m%"
+  let side_central_defs = m%"
   %{
     if layer_count == 0 then
       "// (No layers. This must be peripheral side.)"
@@ -116,14 +125,17 @@ m%"
     else
       "// (No macros)"
   }
-"% in
+"%
+  in
 
-let c_file =
-  let key_state_inform = fun key_idx in_pin_idx =>
-    "key_state_inform(%{std.to_string key_idx}, !IN%{std.to_string in_pin_idx});" in
-  let set_out_pin = fun high out_pin_idx =>
-    "OUT%{std.to_string out_pin_idx} = %{if high then "1" else "0"};" in
-m%"
+  let c_file =
+    let key_state_inform = fun key_idx in_pin_idx =>
+      "key_state_inform(%{std.to_string key_idx}, !IN%{std.to_string in_pin_idx});"
+    in
+    let set_out_pin = fun high out_pin_idx =>
+      "OUT%{std.to_string out_pin_idx} = %{if high then "1" else "0"};"
+    in
+    m%"
   #include "ch552.h"
 
   %{side_central_defs}
@@ -171,7 +183,7 @@ m%"
       row_mapping
       |> util.array.enumerate
       |> std.array.filter (fun { index, value } => value >= 0)
-      |> std.array.map (fun { index, value } => 
+      |> std.array.map (fun { index, value } =>
           let in_pin_idx = std.array.at index ir.kscan.matrix.ins in
           let key_idx = value in
           key_state_inform key_idx in_pin_idx
@@ -184,15 +196,16 @@ m%"
 
     ir.kscan.matrix.mapping
     |> util.array.enumerate
-    |> std.array.map (fun { index, value } => 
+    |> std.array.map (fun { index, value } =>
         matrix_row_scan (std.array.at index ir.kscan.matrix.outs) value
       )
     |> util.array.join "\n\n"
   }
   }
-"% in
+"%
+  in
 
-{
-  h = h_file,
-  c = c_file,
-}
+  {
+    h = h_file,
+    c = c_file,
+  }
