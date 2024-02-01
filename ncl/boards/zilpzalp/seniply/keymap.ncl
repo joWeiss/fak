@@ -74,7 +74,7 @@ let combos_base = [
   kc.Q,
   # right side, top row
   kc.SLSH, kc.MINS,# kc.SCLN,
-                                           ks.COLN,
+  ks.COLN,
   # left side, middle row
   ks.LCBR, kc.LBRC, ks.LPRN, kc.G, 
   # right side, middle row
@@ -82,7 +82,7 @@ let combos_base = [
   # left side, bottom row
   kc.Z, kc.ESC,  
   # right side, bottom row
-  kc.BSPC, kc.DEL, md.lctl & kc.BSPC,
+  kc.BSPC, kc.DEL,
   # extras
   # fak.CWTG, kc.CAPS_LOCK,
   ltNum, ltFun,
@@ -115,7 +115,7 @@ let combos_base = [
     # combo.make 25 [20, 23], # ENT
     combo.make 25 [5, 6], # BSPC
     combo.make 25 [6, 7], # DEL
-    combo.make 25 [5, 7], # C-BSPC
+    # combo.make 25 [5, 7], # C-BSPC
     # caps
     # combo.make 25 [11, 14], # caps word
     # combo.make 25 [0, 7], # caps lock
@@ -135,7 +135,7 @@ let combos_base = [
     [
                   kc.ESC,      tx & hx,     tx & hx,    cu.PSTE,        kc.PGUP,    kc.HOME,    kc.DEL,  kc.END,
       sk.lalt,    sk.lgui,     sk.lsft,     sk.lctl,    sk.ralt,        kc.PGDN,    kc.LEFT,    kc.DOWN,  kc.UP,    kc.RGHT,
-       md.lgui & mdh.lgui,      cu.COPY,    cu.PSTE,                                kc.BSPC,    kc.TAB,  kc.PSCR,
+       md.lgui,      cu.COPY,    cu.PSTE,                                kc.BSPC,    kc.TAB,  kc.PSCR,
                                             tt & ht,     tt & ht,       kc.ENTER,   tt & ht
     ] @ combos_base,
     # NUM
